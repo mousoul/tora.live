@@ -6,7 +6,7 @@
 
 **进行此步骤之前请先确保拥有 python 环境并安装依赖**
 
-1. 按照模板 `scrips/example.xlsx` 填写，制作歌单内容
+1. 参考 `scripts/example.xlsx` 填写，并将文件保存为 `music.xlsx`
 2. 运行 `python3 scripts/converter.py` 生成歌单文件
 
 ### 修改配置文件

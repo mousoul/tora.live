@@ -1,7 +1,10 @@
 import json
 import pandas as pd
 
-song_df = pd.read_excel('./muisc.xlsx')
+# Read the filled Excel sheet. The file name was misspelled as
+# ``muisc.xlsx`` originally which caused a FileNotFoundError.  The
+# correct file name is ``music.xlsx``.
+song_df = pd.read_excel('./music.xlsx')
 song_df = song_df.where(pd.notnull(song_df), None)
 song_list = []
 
