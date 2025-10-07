@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import Head from 'next/head'
 import Link from 'next/link'
@@ -7,7 +7,7 @@ import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import 'react-toastify/dist/ReactToastify.css'
 
-import { Button, Col, Container, Form, Offcanvas, Row, Table } from 'react-bootstrap'
+import { Button, Col, Container, Offcanvas, Row, Table } from 'react-bootstrap'
 import { toast } from 'react-toastify'
 import copy from 'copy-to-clipboard'
 
@@ -32,7 +32,8 @@ export default function Home() {
     paid: false,
     remark: "",
   });
-  const [searchBox, setSearchBox] = useState("");
+  const [searchTags, setSearchTags] = useState([]);
+  const [searchInputValue, setSearchInputValue] = useState("");
   const [showToTopButton, setToTopShowButton] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
   const [modalPlayerShow, setPlayerModalShow] = useState(false);
@@ -40,6 +41,7 @@ export default function Home() {
   const [BVID, setBVID] = useState("");
   const [sortKey, setSortKey] = useState(null); // 'title', 'artist', etc.
   const [sortDirection, setSortDirection] = useState('asc');
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     //检测窗口滚动
@@ -64,24 +66,36 @@ export default function Home() {
 
   //根据首字母和搜索框进行过滤
   const filteredSongList = MusicList.filter(
-    (song) =>
-      //搜索框搜歌名
-      (utils.include(song.song_name, searchBox) || utils.include(song.language, searchBox) ||
-        utils.include(song.remarks, searchBox) || utils.include(song.artist, searchBox)) &&
-      //语言过滤按钮
-      (categorySelection.lang != ""
-        ? song.language?.includes(categorySelection.lang)
-        : true) &&
-      //首字母过滤按钮
-      (categorySelection.initial != ""
-        ? song.initial?.includes(categorySelection.initial)
-        : true) &&
-      //类型过滤按钮
-      (categorySelection.remark != ""
-        ? song.remarks?.toLowerCase().includes(categorySelection.remark)
-        : true) &&
-      //付费过滤按钮
-      (categorySelection.paid ? song.paid == 1 : true)
+    (song) => {
+      const searchableFields = [song.song_name, song.language, song.remarks, song.artist];
+      const matchesFreeText = searchInputValue.trim() === ""
+        ? true
+        : searchableFields.some((field) => utils.include(field, searchInputValue));
+      const matchesTags = searchTags.length === 0
+        ? true
+        : searchTags.every((tag) =>
+            searchableFields.some((field) => utils.include(field, tag))
+          );
+
+      return (
+        matchesFreeText &&
+        matchesTags &&
+        //语言过滤按钮
+        (categorySelection.lang != ""
+          ? song.language?.includes(categorySelection.lang)
+          : true) &&
+        //首字母过滤按钮
+        (categorySelection.initial != ""
+          ? song.initial?.includes(categorySelection.initial)
+          : true) &&
+        //类型过滤按钮
+        (categorySelection.remark != ""
+          ? song.remarks?.toLowerCase().includes(categorySelection.remark)
+          : true) &&
+        //付费过滤按钮
+        (categorySelection.paid ? song.paid == 1 : true)
+      );
+    }
   );
 
   const collator = new Intl.Collator(['zh', 'ja', 'en'], {
@@ -167,6 +181,52 @@ export default function Home() {
     setPlayerModalSongName(song.song_name);
   }
 
+  const focusSearchInput = () => {
+    searchInputRef.current?.focus();
+  };
+
+  const addSearchTag = (tag) => {
+    if (!tag) {
+      return;
+    }
+    const trimmedTag = tag.trim();
+    if (!trimmedTag) {
+      return;
+    }
+    const exists = searchTags.some(
+      (existingTag) => existingTag.toLowerCase() === trimmedTag.toLowerCase()
+    );
+    if (!exists) {
+      setSearchTags((prev) => [...prev, trimmedTag]);
+    }
+    setSearchInputValue("");
+    focusSearchInput();
+  };
+
+  const removeSearchTag = (tagToRemove) => {
+    setSearchTags((prev) => prev.filter((tag) => tag !== tagToRemove));
+    focusSearchInput();
+  };
+
+  const handleSearchInputChange = (value) => {
+    setSearchInputValue(value);
+  };
+
+  const handleSearchInputKeyDown = (event) => {
+    const trimmedValue = searchInputValue.trim();
+    if (event.key === 'Enter' || event.key === ',' || event.key === 'Tab') {
+      if (trimmedValue) {
+        event.preventDefault();
+        addSearchTag(trimmedValue);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+      }
+    } else if (event.key === 'Backspace' && searchInputValue === "" && searchTags.length) {
+      event.preventDefault();
+      removeSearchTag(searchTags[searchTags.length - 1]);
+    }
+  };
+
   return (
     <div className={styles.outerContainer}>
       <Link href={"https://live.bilibili.com/" + config.BiliLiveRoomID} passHref>
@@ -228,13 +288,36 @@ export default function Home() {
           </Row>
           <Row>
             <Col xs={12} md={9}>
-              <Form.Control
-                className={styles.filters}
-                type="search"
-                aria-label="搜索"
-                placeholder="搜索"
-                onChange={(e) => setSearchBox(e.target.value)}
-              />
+              <div
+                className={`${styles.filters} ${styles.searchTagInput}`}
+                onClick={focusSearchInput}
+              >
+                {searchTags.map((tag) => (
+                  <span key={tag} className={styles.searchTagPill}>
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      className={styles.searchTagRemove}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSearchTag(tag);
+                      }}
+                      aria-label={`移除 ${tag}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <input
+                  ref={searchInputRef}
+                  value={searchInputValue}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
+                  onKeyDown={handleSearchInputKeyDown}
+                  className={styles.searchTagInputField}
+                  placeholder={searchTags.length ? "" : "搜索"}
+                  aria-label="搜索"
+                />
+              </div>
             </Col>
             <Col xs={12} md={3}>
               <div className="d-grid">
@@ -277,6 +360,7 @@ export default function Home() {
                       filteredSongList={sortedList}
                       handleClickToCopy={handleClickToCopy}
                       showBiliPlayer={showBiliPlayer}
+                      onTagAdd={addSearchTag}
                     />
                     </tbody>
                   </Table>
