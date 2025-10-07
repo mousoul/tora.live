@@ -1,5 +1,7 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
+import imageLoader from "../../utils/ImageLoader";
 
 import styles from "../../styles/Home.module.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -21,7 +23,7 @@ export default function BannerButton({
           className={styles.customRandomButton}
           style={style}
         >
-          <img className={styles.biliIcon} src={image} /> {name}{" "}
+          <Image loader={imageLoader} className={styles.biliIcon} src={image} alt={name || "图标"} width={20} height={20} /> {name}{" "}
           <ChevronSVG />
         </Button>
       </a>

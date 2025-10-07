@@ -23,7 +23,12 @@ export default function SongListFilter({
   setRemarkState,
   setPaidState,
   setInitialState,
+  // 新增：用于标签式语言筛选
+  searchTags = [],
+  onLanguageTagToggle,
 }) {
+  const isTagActive = (label) =>
+    searchTags.some((t) => t.toLowerCase() === String(label).toLowerCase());
   return (
     <Col>
       <div className={styles.categorySelectionContainer}>
@@ -43,17 +48,29 @@ export default function SongListFilter({
         </h5>
         <Container fluid>
         <Row className="gx-3 gy-2"> {/* 可选加些间距 */}
-  {languageCategories.map((language) => (
+  {["全部", ...languageCategories].map((language) => (
     <Col style={{ width: "20%" }} key={language}>
       <div className="d-grid">
         <Button
-          className={isActive(categorySelection.lang, language)}
+          className={
+            language === "全部"
+              ? (((searchTags?.length ?? 0) === 0 && (!categorySelection?.lang || categorySelection.lang === "") && (!categorySelection?.initial || categorySelection.initial === "") && (!categorySelection?.remark || categorySelection.remark === "") && (!categorySelection?.paid || categorySelection.paid === false))
+                ? styles.customCategoryButtonActive
+                : styles.customCategoryButton)
+              : (isTagActive(language)
+                ? styles.customCategoryButtonActive
+                : isActive(categorySelection.lang, language))
+          }
           onClick={(e) => {
-            switchState(
-              setLanguageState,
-              categorySelection.lang,
-              language
-            );
+            if (onLanguageTagToggle) {
+              onLanguageTagToggle(language);
+            } else {
+              switchState(
+                setLanguageState,
+                categorySelection.lang,
+                language
+              );
+            }
           }}
         >
           {language}

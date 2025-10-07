@@ -1,6 +1,8 @@
-import styles from "../styles/Home.module.css";
+﻿import styles from "../styles/Home.module.css";
 
 import { Button } from "react-bootstrap";
+import Image from "next/image";
+import imageLoader from "../utils/ImageLoader";
 
 const splitValueToTags = (value) => {
   if (!value) {
@@ -9,7 +11,8 @@ const splitValueToTags = (value) => {
 
   return value
     .toString()
-    .split(/[、,，/\\;；]+/)
+    // 英文逗号/分号、中文逗号/分号、顿号、斜杠与反斜杠
+    .split(/[\,\;\u3001\uFF0C\uFF1B\/\\]+/)
     .map((item) => item.trim())
     .filter(Boolean);
 };
@@ -19,12 +22,13 @@ export default function SongDetail({
   handleClickToCopy,
   showBiliPlayer,
   onTagAdd,
+  searchTags = [],
 }) {
   if (filteredSongList.length == 0) {
     return (
       <tr>
         <td className="display-6 text-center" colSpan="6" id="noSongInList">
-          歌单里没有诶~隐藏歌单碰碰运气!
+          姝屽崟閲屾病鏈夎~闅愯棌姝屽崟纰扮杩愭皵!
         </td>
       </tr>
     );
@@ -42,15 +46,20 @@ export default function SongDetail({
       return <span>{value}</span>;
     }
 
-    return tags.map((tag, index) => (
-      <span
-        key={`${tag}-${index}`}
-        className={styles.inlineTagPill}
-        onClick={(event) => handleTagClick(event, tag)}
-      >
-        {tag}
-      </span>
-    ));
+    return tags.map((tag, index) => {
+      const isActive = searchTags.some(
+        (t) => t.toLowerCase() === tag.toString().toLowerCase()
+      );
+      return (
+        <span
+          key={`${tag}-${index}`}
+          className={`${styles.inlineTagPill} ${isActive ? styles.inlineTagPillActive : ""}`}
+          onClick={(event) => handleTagClick(event, tag)}
+        >
+          {tag}
+        </span>
+      );
+    });
   };
 
   return filteredSongList.map((song) => (
@@ -69,22 +78,28 @@ export default function SongDetail({
     >
       <td className={styles.tableIconTd}>
         {song.sticky_top == 1 ? (
-          <img
+          <Image
+            loader={imageLoader}
             src="/assets/icon/up_arrow.png"
-            alt="置顶"
+            alt="缃《"
             className={styles.tableIcons}
-            title="置顶曲目"
-          ></img>
+            width={27}
+            height={27}
+            title="缃《鏇茬洰"
+          />
         ) : (
           <div></div>
         )}
         {song.paid == 1 ? (
-          <img
+          <Image
+            loader={imageLoader}
             src="/assets/icon/orb.png"
-            alt="付费"
+            alt="浠樿垂"
             className={styles.tableIcons}
-            title="付费曲目"
-          ></img>
+            width={27}
+            height={27}
+            title="浠樿垂鏇茬洰"
+          />
         ) : (
           <div></div>
         )}
@@ -99,7 +114,7 @@ export default function SongDetail({
         {song.BVID ? (
           <Button
             className={styles.customRandomButton}
-            title="投稿歌切试听"
+            title="鎶曠姝屽垏璇曞惉"
             style={{ marginTop: 0, padding: "0.25rem" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -129,3 +144,5 @@ export default function SongDetail({
     </tr>
   ));
 }
+
+

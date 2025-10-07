@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Image from "next/image";
+import imageLoader from "../utils/ImageLoader";
 
 import styles from "../styles/404Page.module.css";
 
@@ -15,7 +16,8 @@ export default function Custom404() {
 
       {/* 添加图片区域 */}
       <div className={styles.imageWrapper}>
-      <img
+      <Image
+  loader={imageLoader}
   src="/assets/images/404.png"
   alt="404图片"
   width={850}

@@ -71,6 +71,7 @@ export default function Banner({ songCount }) {
           loader={imageLoader}
           className={styles.avatar}
           src="./assets/images/banner_image.webp"
+          alt={`${config.Name} 头像`}
           width={250}
           height={250}
         />

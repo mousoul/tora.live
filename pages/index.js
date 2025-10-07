@@ -193,19 +193,60 @@ export default function Home() {
     if (!trimmedTag) {
       return;
     }
+    const langCategories = (config.LanguageCategories || []).map((s) =>
+      s.toLowerCase()
+    );
+    const isLanguage = langCategories.includes(trimmedTag.toLowerCase());
     const exists = searchTags.some(
       (existingTag) => existingTag.toLowerCase() === trimmedTag.toLowerCase()
     );
     if (!exists) {
-      setSearchTags((prev) => [...prev, trimmedTag]);
+      setSearchTags((prev) => {
+        const withoutOtherLangs = isLanguage
+          ? prev.filter((t) => !langCategories.includes(t.toLowerCase()))
+          : prev;
+        return [...withoutOtherLangs, trimmedTag];
+      });
     }
     setSearchInputValue("");
     focusSearchInput();
   };
 
   const removeSearchTag = (tagToRemove) => {
-    setSearchTags((prev) => prev.filter((tag) => tag !== tagToRemove));
+    setSearchTags((prev) =>
+      prev.filter((tag) => tag.toLowerCase() !== tagToRemove.toLowerCase())
+    );
     focusSearchInput();
+  };
+
+  // 重复点击同一标签 -> 切换为删除效果（存在则移除，不存在则添加）
+  const addOrRemoveSearchTag = (tag) => {
+    if (!tag) return;
+    const trimmedTag = tag.toString().trim();
+    if (!trimmedTag) return;
+
+    const langCategories = (config.LanguageCategories || []).map((s) =>
+      s.toLowerCase()
+    );
+    const exists = searchTags.some(
+      (existingTag) => existingTag.toLowerCase() === trimmedTag.toLowerCase()
+    );
+    const isLanguage = langCategories.includes(trimmedTag.toLowerCase());
+    if (exists) {
+      removeSearchTag(trimmedTag);
+    } else {
+      if (isLanguage) {
+        // 语言标签互斥：添加新语言前，移除已有的语言标签
+        setSearchTags((prev) => [
+          ...prev.filter((t) => !langCategories.includes(t.toLowerCase())),
+          trimmedTag,
+        ]);
+        setSearchInputValue("");
+        focusSearchInput();
+      } else {
+        addSearchTag(trimmedTag);
+      }
+    }
   };
 
   const handleSearchInputChange = (value) => {
@@ -225,6 +266,14 @@ export default function Home() {
       event.preventDefault();
       removeSearchTag(searchTags[searchTags.length - 1]);
     }
+  };
+
+  // 清除所有过滤项（顶部“全部”）
+  const clearAllFilters = () => {
+    setSearchTags([]);
+    setCategorySelection({ lang: "", initial: "", paid: false, remark: "" });
+    setSearchInputValue("");
+    focusSearchInput();
   };
 
   return (
@@ -284,6 +333,14 @@ export default function Home() {
               setRemarkState={setRemarkState}
               setPaidState={setPaidState}
               setInitialState={setInitialState}
+              searchTags={searchTags}
+              onLanguageTagToggle={(label) => {
+                if (label === '全部') {
+                  clearAllFilters();
+                } else {
+                  addOrRemoveSearchTag(label);
+                }
+              }}
             />
           </Row>
           <Row>
@@ -360,7 +417,8 @@ export default function Home() {
                       filteredSongList={sortedList}
                       handleClickToCopy={handleClickToCopy}
                       showBiliPlayer={showBiliPlayer}
-                      onTagAdd={addSearchTag}
+                      onTagAdd={addOrRemoveSearchTag}
+                      searchTags={searchTags}
                     />
                     </tbody>
                   </Table>
