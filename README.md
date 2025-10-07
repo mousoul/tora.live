@@ -1,6 +1,6 @@
 # VUP 歌单（tora.live）
 
-本项目forked from Akegarasu/vup-song-list(https://github.com/Akegarasu/vup-song-list)，在其基础上进行了本地化与交互增强。
+本项目forked from Akegarasu/vup-song-list，在其基础上进行了本地化与交互增强。
 
 
 ## 部署使用
