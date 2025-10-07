@@ -2,10 +2,23 @@ import styles from "../styles/Home.module.css";
 
 import { Button } from "react-bootstrap";
 
+const splitValueToTags = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .toString()
+    .split(/[、,，/\\;；]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
 export default function SongDetail({
   filteredSongList,
   handleClickToCopy,
-  showBiliPlayer
+  showBiliPlayer,
+  onTagAdd,
 }) {
   if (filteredSongList.length == 0) {
     return (
@@ -16,6 +29,30 @@ export default function SongDetail({
       </tr>
     );
   }
+  const handleTagClick = (event, tagValue) => {
+    event.stopPropagation();
+    if (tagValue && onTagAdd) {
+      onTagAdd(tagValue);
+    }
+  };
+
+  const renderTagCell = (value) => {
+    const tags = splitValueToTags(value);
+    if (tags.length === 0) {
+      return <span>{value}</span>;
+    }
+
+    return tags.map((tag, index) => (
+      <span
+        key={`${tag}-${index}`}
+        className={styles.inlineTagPill}
+        onClick={(event) => handleTagClick(event, tag)}
+      >
+        {tag}
+      </span>
+    ));
+  };
+
   return filteredSongList.map((song) => (
     <tr
       className={
@@ -86,9 +123,9 @@ export default function SongDetail({
           <div></div>
         )}
       </td>
-      <td className={styles.noWrapForce}>{song.artist}</td>
-      <td className={styles.noWrapForce}>{song.language}</td>
-      <td className={styles.noWrapForce}>{song.remarks}</td>
+      <td className={styles.tagCell}>{renderTagCell(song.artist)}</td>
+      <td className={styles.tagCell}>{renderTagCell(song.language)}</td>
+      <td className={styles.tagCell}>{renderTagCell(song.remarks)}</td>
     </tr>
   ));
 }
