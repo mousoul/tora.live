@@ -12,7 +12,7 @@ export default function BannerMobile({}) {
       {config.BannerContent.map((cnt) => {
         return <p className={styles.introParagraph} key={cnt}>{cnt}</p>;
       })}
-      {config.CustomButtons.map((btn) => {
+      {(config.CustomButtons || []).map((btn) => {
         return (
           <BannerButton
             link={btn.link}
